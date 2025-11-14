@@ -1,0 +1,1 @@
+DB_PATH = '/var/db/whatsinplate/db'
