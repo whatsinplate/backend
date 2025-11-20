@@ -10,13 +10,16 @@ def get_user_info(auth_token: str,
 				  db: DBManager = Depends(get_db)):
 	user_info = db.get_user_info(auth_token)
 	if user_info is not None:
-		return {
-			'age': user_info[0],
-			'gender': user_info[1],
-			'height': user_info[2],
-			'weight': user_info[3],
-			'goal': user_info[4]
-		}
+		if user_info:
+			return {
+				'age': user_info[0],
+				'gender': user_info[1],
+				'height': user_info[2],
+				'weight': user_info[3],
+				'goal': user_info[4]
+			}
+		else:
+			raise HTTPException(status_code=204)
 	else:
 		raise HTTPException(
 			status_code=401, detail={'message': 'Token is invald.'}

@@ -134,7 +134,7 @@ class DBManager:
 				)
 				for table, column in tables:
 					self.cursor.execute(
-						'DELETE FROM {table} WHERE {column}=?', (uid,)
+						f'DELETE FROM {table} WHERE {column}=?', (uid,)
 					)
 				self.connection.commit()
 				return True
