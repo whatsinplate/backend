@@ -18,3 +18,11 @@ class ResetPasswordRequestModel(BaseModel):
 class DeleteAccountRequestModel(BaseModel):
 	auth_token: str
 	password: str
+
+class SetUserInfoRequestModel(BaseModel):
+	auth_token: str
+	age: int
+	gender: str
+	height: float
+	weight: int
+	goal: str

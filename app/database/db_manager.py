@@ -59,8 +59,9 @@ class DBManager:
 	def new_user(self, login, password, secret_q, secret_q_answer):
 		uid = str(uuid.uuid4())
 		password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-		secret_q_ans_hash = bcrypt.hashpw(secret_q_answer.encode(),
-										  bcrypt.gensalt())
+		secret_q_ans_hash = bcrypt.hashpw(
+			secret_q_answer.encode(), bcrypt.gensalt()
+		)
 		query = '''INSERT INTO users(
 			uid, login, pwd_bcrypt, secret_q, secret_q_ans_bcrypt
 			)  VALUES (?, ?, ?, ?, ?)
@@ -97,8 +98,8 @@ class DBManager:
 
 	def reset_password(self, login, secret_q_ans, new_password):
 		query = 'SELECT secret_q_ans_bcrypt FROM users WHERE login=?'
-		secret_q_ans_hash = self.cursor.execute(query, 
-												(login,)).fetchone()[0]
+		secret_q_ans_hash = self.cursor.execute(
+									query, (login,)).fetchone()[0]
 		if bcrypt.checkpw(secret_q_ans.encode(), secret_q_ans_hash):
 			new_pwd_hash = bcrypt.hashpw(new_password.encode(),
 										 bcrypt.gensalt())
@@ -137,4 +138,36 @@ class DBManager:
 					)
 				self.connection.commit()
 				return True
+		return False
+
+	def get_user_info(self, auth_token):
+		uid = self.get_user_id_by_token(auth_token)
+		if uid:
+			query = 'SELECT * FROM user_info WHERE uid=?'
+			result = self.cursor.execute(query, (uid,)).fetchone()
+			if result:
+				return result[1:]
+			return ()
+		return None
+
+	def set_user_info(self, auth_token, age, gender, height, weight, goal):
+		uid = self.get_user_id_by_token(auth_token)
+		if uid:
+			user_info = self.get_user_info(auth_token)
+			if user_info:
+				query = '''UPDATE user_info SET
+					age=?, gender=?, height=?, weight=?,
+					goal=? WHERE uid=?'''
+				self.cursor.execute(query, (
+					age, gender, height, weight, goal, uid
+				))
+			else:
+				query = '''INSERT INTO user_info(
+					uid, age, gender, height, weight, goal)
+					VALUES (?, ?, ?, ?, ?, ?)'''
+				self.cursor.execute(query, (
+					uid, age, gender, height, weight, goal
+				))
+			self.connection.commit()
+			return True
 		return False

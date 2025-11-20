@@ -65,7 +65,7 @@ def revoke_auth_tokens(auth_token: str, db: DBManager = Depends(get_db)):
 		return {'message': 'All tokens have been revoked.'}
 	else:
 		raise HTTPException(
-			status_code=401, detail={'message': 'Token is invalid'}
+			status_code=401, detail={'message': 'Token is invalid.'}
 		)
 
 @router.post('/delete_account')
