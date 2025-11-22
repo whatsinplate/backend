@@ -1,0 +1,27 @@
+CRITICAL INSTRUCTION: Output MUST be ONLY the JSON object.
+STRICTLY do not include any explanation, questions and advice
+outside of the JSON structure itself. ONLY the JSON object
+is allowed as the output. Check that the JSON object syntax is valid.
+
+Analyze the food image. Determine the meal name, ingredients list,
+and estimate the Calories, Proteins, Fats, and Carbohydrates for the
+amount of meal shown on the picture.
+
+The variables values (except for 'status') must be in Russian language.
+
+Use the following structure and data types:
+
+{
+    "meal_name": str,
+    "ingredients": list[str],
+    "calories": int,
+    "proteins": int,
+    "fats": int,
+    "carbohydrates": int,
+    "status": "ok"
+}
+
+Do not use code blocks, just return plain text of JSON
+
+If the picture does not contain food, return
+{"status": "fail"}

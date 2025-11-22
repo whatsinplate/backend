@@ -32,7 +32,7 @@ class DBManager:
 			'tokens(token, uid, expiration_timestamp)',
 			'user_info(uid, age, gender, height, weight, goal)',
 			'meals(id, name, ingredients, calories, proteins, fats, '
-				  'carbohydrates, img_base64, owner_uid)',
+				  'carbohydrates, img_base64, owner_uid, timestamp)',
 			'tracker(uid, date, saved_meals)'
 		)
 
@@ -171,3 +171,68 @@ class DBManager:
 			self.connection.commit()
 			return True
 		return False
+
+	def add_meal(self, uid, scan_result, img_base64):
+		meal_id = str(uuid.uuid4())
+		meal_name = scan_result['meal_name']
+		ingredients = '|'.join(scan_result['ingredients'])
+		calories = scan_result['calories']
+		proteins = scan_result['proteins']
+		fats = scan_result['fats']
+		carbohydrates = scan_result['carbohydrates']
+
+		query = '''INSERT INTO meals(
+			id, name, ingredients, calories, proteins, fats,
+			carbohydrates, img_base64, owner_uid, timestamp) 
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+		self.cursor.execute(query, (
+			meal_id,
+			meal_name,
+			ingredients,
+			calories,
+			proteins,
+			fats,
+			carbohydrates,
+			img_base64,
+			uid,
+			self.unix_time()
+		))
+		self.connection.commit()
+
+		return meal_id
+
+	def get_meal(self, meal_id):
+		query = '''SELECT name, ingredients, calories, proteins, 
+			fats, carbohydrates, owner_uid, timestamp FROM meals 
+			WHERE id=?'''
+		result = self.cursor.execute(query, (meal_id,)).fetchone()
+		return result
+
+	def meal_photo(self, meal_id):
+		query = 'SELECT owner_uid, img_base64 FROM meals WHERE id=?'
+		result = self.cursor.execute(query, (meal_id,)).fetchone()
+		return result
+
+	def get_tracker_record(self, uid, date):
+		query = 'SELECT saved_meals FROM tracker WHERE uid=? AND date=?'
+		result = self.cursor.execute(query, (uid, date)).fetchone()
+		return result
+
+	def save_meal_to_tracker(self, uid, meal_id):
+		query = 'SELECT timestamp FROM meals WHERE id=?'
+		result = self.cursor.execute(query, (meal_id,)).fetchone()
+		if result:
+			date = str(datetime.fromtimestamp(result[0])).split()[0]
+			tracker_record = self.get_tracker_record(uid, date)
+			if tracker_record:
+				new_tracker_record = f'{tracker_record[0]}|{meal_id}'
+				query = 'UPDATE tracker SET saved_meals=? WHERE uid=? AND date=?'
+				self.cursor.execute(query, (new_tracker_record, uid, date))
+			else:
+				query = '''INSERT INTO tracker(uid, date, saved_meals)
+						VALUES (?, ?, ?)'''
+				self.cursor.execute(query, (uid, date, meal_id))
+			self.connection.commit()
+			return True
+		else:
+			return False

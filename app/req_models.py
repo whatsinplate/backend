@@ -26,3 +26,11 @@ class SetUserInfoRequestModel(BaseModel):
 	height: float
 	weight: int
 	goal: str
+
+class ScanRequestModel(BaseModel):
+	auth_token: str
+	img_base64: str
+
+class SaveMealRequestModel(BaseModel):
+	auth_token: str
+	meal_id: str
