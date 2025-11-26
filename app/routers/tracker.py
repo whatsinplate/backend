@@ -11,7 +11,7 @@ def get_record(auth_token: str, date: str, db: DBManager = Depends(get_db)):
 	if uid:
 		record = db.get_tracker_record(uid, date)
 		if record:
-			return {'meals': record[0].split('|')}
+			return {'meals': record.split('|')}
 		else:
 			raise HTTPException(status_code=204)
 	else:

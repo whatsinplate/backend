@@ -216,7 +216,7 @@ class DBManager:
 	def get_tracker_record(self, uid, date):
 		query = 'SELECT saved_meals FROM tracker WHERE uid=? AND date=?'
 		result = self.cursor.execute(query, (uid, date)).fetchone()
-		return result
+		return result[0]
 
 	def save_meal_to_tracker(self, uid, meal_id):
 		query = 'SELECT timestamp FROM meals WHERE id=?'

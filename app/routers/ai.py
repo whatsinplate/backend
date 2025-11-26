@@ -23,6 +23,10 @@ scan_prompt_path = f'{script_dir}/../static/scan_prompt.txt'
 with open(scan_prompt_path, 'r') as file:
 	scan_prompt = file.read()
 
+recommendation_prompt_path = f'{script_dir}/../static/recommendation_prompt.txt'
+with open(recommendation_prompt_path, 'r') as file:
+	recommendation_prompt = file.read()
+
 @router.post('/scan')
 async def scan(model: req_models.ScanRequestModel,
 			   db: DBManager = Depends(get_db)):
@@ -79,3 +83,47 @@ async def scan(model: req_models.ScanRequestModel,
 		raise HTTPException(
 			status_code=401, detail={'message': 'Token is invalid.'}
 		)
+
+@router.get('/recommendation')
+async def get_recommendation(auth_token: str,
+							 date: str,
+							 db: DBManager = Depends(get_db)):
+	uid = await run_in_threadpool(
+		db.get_user_id_by_token, auth_token
+    )
+	if uid:
+		tracker_record = await run_in_threadpool(
+			db.get_tracker_record, uid, date
+		)
+		if tracker_record:
+			meals = []
+			for meal_id in tracker_record.split('|'):
+				meal = await run_in_threadpool(db.get_meal, meal_id)
+				meals.append(meal[0])
+			user_info_entry = await run_in_threadpool(db.get_user_info, auth_token)
+			user_info = {
+				'age': user_info_entry[0],
+				'gender': user_info_entry[1],
+				'height': f'{user_info_entry[2]} cm',
+				'weight': f'{user_info_entry[3]} kg',
+				'goal': user_info_entry[4]
+			}
+			response = await client.aio.models.generate_content(
+            	model=config.AI_MODEL,
+            	contents=[
+                	recommendation_prompt + str(user_info) + '\n\n' + str(meals)
+				]
+        	)
+			return {'recommendation': response.text}
+
+		else:
+			raise HTTPException(
+				status_code=204,
+				detail={'message': 'No meals are saved this day.'}
+			)
+	else:
+		raise HTTPException(
+			status_code=401,
+			detail={'message': 'Token is invalid.'}
+		)
+
