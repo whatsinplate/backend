@@ -22,7 +22,7 @@ def get_user_info(auth_token: str,
 			raise HTTPException(status_code=204)
 	else:
 		raise HTTPException(
-			status_code=401, detail={'message': 'Token is invald.'}
+			status_code=401, detail={'message': 'Token is invalid.'}
 		)
 
 @router.post('/set')

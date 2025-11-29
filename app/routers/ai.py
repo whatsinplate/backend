@@ -101,21 +101,26 @@ async def get_recommendation(auth_token: str,
 				meal = await run_in_threadpool(db.get_meal, meal_id)
 				meals.append(meal[0])
 			user_info_entry = await run_in_threadpool(db.get_user_info, auth_token)
-			user_info = {
-				'age': user_info_entry[0],
-				'gender': user_info_entry[1],
-				'height': f'{user_info_entry[2]} cm',
-				'weight': f'{user_info_entry[3]} kg',
-				'goal': user_info_entry[4]
-			}
-			response = await client.aio.models.generate_content(
-            	model=config.AI_MODEL,
-            	contents=[
-                	recommendation_prompt + str(user_info) + '\n\n' + str(meals)
-				]
-        	)
-			return {'recommendation': response.text}
-
+			if user_info_entry:
+				user_info = {
+					'age': user_info_entry[0],
+					'gender': user_info_entry[1],
+					'height': f'{user_info_entry[2]} cm',
+					'weight': f'{user_info_entry[3]} kg',
+					'goal': user_info_entry[4]
+				}
+				response = await client.aio.models.generate_content(
+            		model=config.AI_MODEL,
+            		contents=[
+						recommendation_prompt + str(user_info) + '\n\n' + str(meals)
+					]
+				)
+				return {'recommendation': response.text}
+			else:
+				raise HTTPException(
+					status_code=428,
+					detail={'message': 'User info is not set.'}
+				)
 		else:
 			raise HTTPException(
 				status_code=204,
